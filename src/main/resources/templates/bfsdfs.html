@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Visualizer: BFS & DFS</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1729 0%, #1a2642 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+     .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+     .back-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+     .back-btn:hover {
+            background: #2563eb;
+        }
+        h1 {
+            color: #60a5fa;
+            font-size: 32px;
+            text-align: center;
+            flex: 1;
+        }
+     .control-panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+        select, input {
+            background: #1e293b;
+            color: white;
+            border: 2px solid #334155;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        select:focus, input:focus {
+            border-color: #3b82f6;
+        }
+        input[type="text"] {
+            width: 250px;
+        }
+        input[type="number"] {
+            width: 80px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+     .btn-load,.btn-play,.btn-pause,.btn-next {
+            background: #3b82f6;
+            color: white;
+        }
+     .btn-load:hover,.btn-play:hover,.btn-pause:hover,.btn-next:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+     .btn-reset {
+            background: #ef4444;
+            color: white;
+        }
+     .btn-reset:hover {
+            background: #dc2626;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none!important;
+        }
+     .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+     .speed-control input[type="range"] {
+            width: 150px;
+            accent-color: #3b82f6;
+        }
+     .step-info {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+     .step-counter {
+            color: #fbbf24;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        #graph {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1729 100%);
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+     .legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+        }
+     .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+     .legend-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid;
+        }
+        /* D3 Graph Styles */
+     .link {
+            stroke: #475569;
+            stroke-width: 2px;
+            stroke-opacity: 0.6;
+        }
+     .link.active {
+            stroke: #fbbf24;
+            stroke-width: 4px;
+            stroke-opacity: 1;
+        }
+     .node circle {
+            stroke-width: 3px;
+            cursor: pointer;
+        }
+     .node.unvisited circle {
+            fill: #60a5fa;
+            stroke: #60a5fa;
+            filter: drop-shadow(0 0 5px #60a5fa);
+        }
+     .node.visited circle {
+            fill: #22c55e;
+            stroke: #22c55e;
+            filter: drop-shadow(0 0 10px #22c55e);
+        }
+     .node.current circle {
+            fill: #f59e0b;
+            stroke: #f59e0b;
+            filter: drop-shadow(0 0 20px #f59e0b);
+        }
+     .node text {
+            fill: white;
+            font-size: 16px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-btn">← Back to Home</a>
+        <h1>Graph Visualizer: BFS & DFS</h1>
+        <div style="width: 150px;"></div>
+    </div>
+
+    <div class="control-panel">
+        <select id="algoSelect">
+            <option value="bfs">BFS</option>
+            <option value="dfs">DFS</option>
+        </select>
+
+        <input type="text" id="edgesInput" value="0-1,0-2,1-3,1-4,2-5" placeholder="0-1,0-2,1-3">
+
+        <input type="number" id="startNode" value="0" min="0">
+
+        <button class="btn-load" id="loadBtn">Load Graph</button>
+        <button class="btn-play" id="playBtn">▶ Play</button>
+        <button class="btn-pause" id="pauseBtn">⏸ Pause</button>
+        <button class="btn-next" id="nextBtn">Next →</button>
+        <button class="btn-reset" id="resetBtn">Reset</button>
+
+        <div class="speed-control">
+            <span>Speed:</span>
+            <input type="range" id="speed" min="1" max="10" value="5">
+        </div>
+    </div>
+
+    <div class="step-info">
+        <div class="step-counter" id="message">Load a graph to start</div>
+    </div>
+
+    <svg id="graph"></svg>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-circle" style="background: #60a5fa; border-color: #60a5fa;"></div>
+            <span>Unvisited</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-circle" style="background: #22c55e; border-color: #22c55e;"></div>
+            <span>Visited</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-circle" style="background: #f59e0b; border-color: #f59e0b;"></div>
+            <span>Current</span>
+        </div>
+    </div>
+
+    <script>
+        const svg = d3.select("#graph");
+        const width = window.innerWidth - 80;
+        const height = 600;
+        svg.attr("width", width).attr("height", height);
+
+        let nodes = [], links = [], steps = [];
+        let currentStep = 0, isPlaying = false, playInterval;
+
+        const simulation = d3.forceSimulation()
+          .force("link", d3.forceLink().id(d => d.id).distance(120))
+          .force("charge", d3.forceManyBody().strength(-400))
+          .force("center", d3.forceCenter(width / 2, height / 2));
+
+        function drawGraph(edgesStr) {
+            // Parse edges "0-1,0-2" -> nodes + links
+            const edgeList = edgesStr.split(',').map(e => e.trim().split('-').map(Number));
+            const nodeSet = new Set();
+            edgeList.forEach(([u, v]) => { nodeSet.add(u); nodeSet.add(v); });
+
+            nodes = Array.from(nodeSet).map(id => ({ id, visited: false }));
+            links = edgeList.map(([source, target]) => ({ source, target }));
+
+            svg.selectAll("*").remove();
+
+            const link = svg.append("g")
+              .selectAll("line")
+              .data(links)
+              .join("line")
+              .attr("class", "link");
+
+            const node = svg.append("g")
+              .selectAll("g")
+              .data(nodes)
+              .join("g")
+              .attr("class", "node unvisited")
+              .call(d3.drag()
+                  .on("start", dragstarted)
+                  .on("drag", dragged)
+                  .on("end", dragended));
+
+            node.append("circle").attr("r", 25);
+            node.append("text")
+              .attr("dy", 5)
+              .attr("text-anchor", "middle")
+              .text(d => d.id);
+
+            simulation.nodes(nodes).on("tick", ticked);
+            simulation.force("link").links(links);
+            simulation.alpha(1).restart();
+
+            function ticked() {
+                link.attr("x1", d => d.source.x)
+                  .attr("y1", d => d.source.y)
+                  .attr("x2", d => d.target.x)
+                  .attr("y2", d => d.target.y);
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            }
+        }
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x; d.fy = d.y;
+        }
+        function dragged(event, d) {
+            d.fx = event.x; d.fy = event.y;
+        }
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null; d.fy = null;
+        }
+
+        async function loadGraph() {
+            const algo = document.getElementById('algoSelect').value;
+            const edges = document.getElementById('edgesInput').value;
+            const start = document.getElementById('startNode').value;
+
+            if (!edges) return alert("Edges daal bhai");
+
+            drawGraph(edges);
+
+            try {
+                document.getElementById('message').textContent = 'Loading...';
+                const res = await fetch(`/graph/${algo}?start=${start}&edges=${edges}`);
+                if (!res.ok) throw new Error('Backend error');
+                steps = await res.json();
+                currentStep = 0;
+                updateVisualization();
+                document.getElementById('message').textContent = `Graph loaded. ${steps.length} steps. Click Play or Next.`;
+            } catch (err) {
+                alert("Backend error: " + err);
+                document.getElementById('message').textContent = 'Error: Check console';
+            }
+        }
+
+        function updateVisualization() {
+            if (currentStep >= steps.length) {
+                stopAnimation();
+                return;
+            }
+
+            const step = steps[currentStep];
+            document.getElementById('message').textContent = `Step ${currentStep + 1}/${steps.length}: ${step.message || ''}`;
+
+            // Reset all
+            svg.selectAll(".node").attr("class", "node unvisited");
+            svg.selectAll(".link").attr("class", "link");
+
+            // FIX: Handle null/undefined visited
+            const visitedNodes = Array.isArray(step.visited)? step.visited : [];
+
+            // Mark visited nodes
+            visitedNodes.forEach(id => {
+                svg.selectAll(".node").filter(d => d.id === id)
+                  .attr("class", "node visited");
+            });
+
+            // Mark current node
+            if (step.currentNode!== -1 && step.currentNode!== undefined) {
+                svg.selectAll(".node").filter(d => d.id === step.currentNode)
+                  .attr("class", "node current");
+            }
+
+            // FIX: Handle currentEdge instead of edges
+            const currentEdge = step.currentEdge || [];
+            if (currentEdge.length > 0) {
+                const [u, v] = currentEdge;
+                svg.selectAll(".link").filter(d =>
+                    (d.source.id === u && d.target.id === v) || (d.source.id === v && d.target.id === u)
+                ).attr("class", "link active");
+            }
+        }
+
+        function playAnimation() {
+            if (isPlaying) return;
+            isPlaying = true;
+            const speed = 11 - document.getElementById('speed').value;
+            playInterval = setInterval(() => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateVisualization();
+                } else {
+                    stopAnimation();
+                }
+            }, speed * 200);
+        }
+
+        function stopAnimation() {
+            isPlaying = false;
+            clearInterval(playInterval);
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+
+        function resetGraph() {
+            stopAnimation();
+            currentStep = 0;
+            if (steps.length > 0) updateVisualization();
+        }
+
+        // Event listeners
+        document.getElementById('loadBtn').onclick = loadGraph;
+        document.getElementById('playBtn').onclick = playAnimation;
+        document.getElementById('pauseBtn').onclick = stopAnimation;
+        document.getElementById('nextBtn').onclick = nextStep;
+        document.getElementById('resetBtn').onclick = resetGraph;
+
+        // Auto load on page open
+        window.onload = loadGraph;
+    </script>
+</body>
+</html>

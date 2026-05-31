@@ -1,0 +1,98 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    color: #60a5fa;
+    margin-bottom: 20px;
+}
+
+.controls {
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+input, select, button {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 2px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 14px;
+}
+
+button {
+    background: #3b82f6;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover { background: #2563eb; }
+#resetBtn { background: #ef4444; }
+#resetBtn:hover { background: #dc2626; }
+
+#graph {
+    width: 100%;
+    height: 70vh;
+    background: #1e293b;
+    border-radius: 12px;
+}
+
+.node circle {
+    stroke: #fff;
+    stroke-width: 3px;
+}
+
+.node text {
+    fill: white;
+    font-size: 16px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+.link {
+    stroke: #64748b;
+    stroke-width: 3px;
+}
+
+.link.active {
+    stroke: #22d3ee;
+    stroke-width: 5px;
+}
+
+.node.visited circle {
+    fill: #22c55e;
+}
+
+.node.current circle {
+    fill: #f59e0b;
+    stroke: #fbbf24;
+    stroke-width: 5px;
+}
+
+.node.unvisited circle {
+    fill: #3b82f6;
+}
+
+.message {
+    background: #1e293b;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 10px auto;
+    max-width: 800px;
+    font-size: 18px;
+    color: #fbbf24;
+}

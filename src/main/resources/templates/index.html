@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAA Visualizer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.2rem;
+            margin-bottom: 50px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 30px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: block;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: #3b82f6;
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.3);
+        }
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        .card h2 {
+            color: #60a5fa;
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+        }
+        .card p {
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        .badge {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .badge.ready {
+            background: #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DAA Algorithm Visualizer</h1>
+        <p class="subtitle">Learn Data Structures & Algorithms through Interactive Visualizations</p>
+
+        <div class="grid">
+            <a href="/sort" class="card">
+                <div class="card-icon">📊</div>
+                <h2>Sorting Algos</h2>
+                <p>Bubble, Selection, Insertion, Merge, Quick Sort visualize karo bar charts ke saath</p>
+                <span class="badge ready">5 Algorithms</span>
+            </a>
+
+            <a href="/graph-traversal" class="card">
+                <div class="card-icon">🔍</div>
+                <h2>BFS & DFS</h2>
+                <p>Graph traversal algorithms. Nodes kaise explore hote hain dekho live</p>
+                <span class="badge ready">2 Algorithms</span>
+            </a>
+
+            <a href="/graph-path" class="card">
+                <div class="card-icon">🗺️</div>
+                <h2>Shortest Path</h2>
+                <p>Dijkstra ka algorithm. Source se har node ka shortest path nikalo</p>
+                <span class="badge ready">Click to Visualize</span>
+            </a>
+
+            <a href="/graph-mst" class="card">
+                <div class="card-icon">🌲</div>
+                <h2>Minimum Spanning Tree</h2>
+                <p>Prim's algorithm. Minimum cost se saare nodes connect karo</p>
+                <span class="badge ready">Click to Visualize</span>
+            </a>
+
+            <a href="/dp" class="card">
+                <div class="card-icon">📐</div>
+                <h2>Dynamic Programming</h2>
+                <p>Floyd Warshall. All-pairs shortest path matrix update hote dekho</p>
+                <span class="badge ready">Click to Visualize</span>
+            </a>
+
+            <a href="/greedy" class="card">
+                <div class="card-icon">💰</div>
+                <h2>Greedy Algorithms</h2>
+                <p>Fractional Knapsack. Profit/weight ratio se items choose karo</p>
+                <span class="badge ready">Click to Visualize</span>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

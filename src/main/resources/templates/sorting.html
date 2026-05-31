@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1729 0%, #1a2642 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+    .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+    .back-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+        }
+    .back-btn:hover {
+            background: #2563eb;
+        }
+        h1 {
+            color: #60a5fa;
+            font-size: 32px;
+            text-align: center;
+            flex: 1;
+        }
+    .control-panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+        select, input {
+            background: #1e293b;
+            color: white;
+            border: 2px solid #334155;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+        select:focus, input:focus {
+            border-color: #3b82f6;
+        }
+        input[type="text"] {
+            width: 300px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+    .btn-sort,.btn-play,.btn-pause,.btn-next {
+            background: #3b82f6;
+            color: white;
+        }
+    .btn-sort:hover,.btn-play:hover,.btn-pause:hover,.btn-next:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+    .btn-reset {
+            background: #ef4444;
+            color: white;
+        }
+    .btn-reset:hover {
+            background: #dc2626;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none!important;
+        }
+    .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+    .speed-control input[type="range"] {
+            width: 150px;
+            accent-color: #3b82f6;
+        }
+    .step-info {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+        }
+    .step-counter {
+            color: #fbbf24;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        #barsContainer {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f1729 100%);
+            border-radius: 12px;
+            padding: 40px 20px;
+            min-height: 400px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+   .bar {
+            background: #60a5fa;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            min-width: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+   .bar.comparing {
+            background: #f59e0b!important;
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+            transform: scale(1.05);
+        }
+   .bar.sorted {
+            background: #22c55e!important;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+        }
+   .bar.pivot {
+            background: #ef4444!important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+        }
+   .legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 12px;
+        }
+   .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+   .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-btn">← Back to Home</a>
+        <h1>Sorting Visualizer</h1>
+        <div style="width: 150px;"></div>
+    </div>
+
+    <div class="control-panel">
+        <select id="algoSelect">
+            <option value="bubble">Bubble Sort</option>
+            <option value="selection">Selection Sort</option>
+            <option value="insertion">Insertion Sort</option>
+            <option value="merge">Merge Sort</option>
+            <option value="quick">Quick Sort</option>
+        </select>
+
+        <input type="text" id="arrayInput" value="64,34,25,12,22,11,90" placeholder="64,34,25,12,22">
+
+        <button class="btn-sort" id="sortBtn">Sort</button>
+        <button class="btn-play" id="playBtn">▶ Play</button>
+        <button class="btn-pause" id="pauseBtn">⏸ Pause</button>
+        <button class="btn-next" id="nextBtn">Next →</button>
+        <button class="btn-reset" id="resetBtn">Reset</button>
+
+        <div class="speed-control">
+            <span>Speed:</span>
+            <input type="range" id="speed" min="1" max="10" value="5">
+        </div>
+    </div>
+
+    <div class="step-info">
+        <div class="step-counter" id="message">Enter array and click Sort</div>
+    </div>
+
+    <div id="barsContainer"></div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box" style="background: #60a5fa;"></div>
+            <span>Unsorted</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: #f59e0b;"></div>
+            <span>Comparing</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: #22c55e;"></div>
+            <span>Sorted</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: #ef4444;"></div>
+            <span>Pivot</span>
+        </div>
+    </div>
+
+    <script>
+        let steps = [];
+        let currentStep = 0;
+        let isPlaying = false;
+        let playInterval;
+        let originalArray = [];
+
+        function renderArray(arr, comparing = [], sorted = [], pivot = -1) {
+            const container = document.getElementById('barsContainer');
+            container.innerHTML = '';
+
+            const maxVal = Math.max(...arr);
+            const height = 300;
+
+            arr.forEach((val, idx) => {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+
+                // Color logic - order matters
+                if (sorted.includes(idx)) {
+                    bar.classList.add('sorted');
+                } else if (idx === pivot && pivot!== -1) {
+                    bar.classList.add('pivot');
+                } else if (comparing.includes(idx)) {
+                    bar.classList.add('comparing');
+                }
+
+                bar.style.height = `${(val / maxVal) * height}px`;
+                bar.textContent = val;
+                container.appendChild(bar);
+            });
+        }
+
+        async function sortArray() {
+            const algo = document.getElementById('algoSelect').value;
+            const arrStr = document.getElementById('arrayInput').value;
+
+            if (!arrStr.trim()) {
+                alert('Enter array');
+                return;
+            }
+
+            try {
+                originalArray = arrStr.split(',').map(x => parseInt(x.trim()));
+                document.getElementById('message').textContent = 'Loading...';
+
+                const res = await fetch(`/sort/${algo}?arr=${arrStr}`);
+                if (!res.ok) throw new Error('Backend error');
+
+                steps = await res.json();
+                currentStep = 0;
+                isPlaying = false;
+
+                updateVisualization();
+                document.getElementById('message').textContent = `Array loaded. ${steps.length} steps. Click Play or Next.`;
+            } catch (err) {
+                alert('Error: ' + err.message);
+                console.error(err);
+                document.getElementById('message').textContent = 'Error: Check console';
+            }
+        }
+
+        function updateVisualization() {
+            if (currentStep >= steps.length) {
+                stopAnimation();
+                return;
+            }
+
+            const step = steps[currentStep];
+
+            const arr = step.array || originalArray;
+            const comparing = step.comparing || [];
+            const sorted = step.sorted || [];
+            const pivot = step.pivot!== undefined? step.pivot : -1;
+
+            renderArray(arr, comparing, sorted, pivot);
+
+            document.getElementById('message').textContent =
+                `Step ${currentStep + 1}/${steps.length}: ${step.message || 'Processing...'}`;
+        }
+
+        function playAnimation() {
+            if (isPlaying) return;
+            if (steps.length === 0) {
+                sortArray();
+                return;
+            }
+
+            isPlaying = true;
+            const speed = 11 - document.getElementById('speed').value;
+            playInterval = setInterval(() => {
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    updateVisualization();
+                } else {
+                    stopAnimation();
+                }
+            }, speed * 100);
+        }
+
+        function stopAnimation() {
+            isPlaying = false;
+            clearInterval(playInterval);
+        }
+
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateVisualization();
+            }
+        }
+
+        function resetArray() {
+            stopAnimation();
+            currentStep = 0;
+            if (steps.length > 0) {
+                updateVisualization();
+            } else {
+                const arrStr = document.getElementById('arrayInput').value;
+                originalArray = arrStr.split(',').map(x => parseInt(x.trim()));
+                renderArray(originalArray);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('sortBtn').onclick = sortArray;
+        document.getElementById('playBtn').onclick = playAnimation;
+        document.getElementById('pauseBtn').onclick = stopAnimation;
+        document.getElementById('nextBtn').onclick = nextStep;
+        document.getElementById('resetBtn').onclick = resetArray;
+
+        document.getElementById('speed').addEventListener('input', () => {
+            if (isPlaying) {
+                stopAnimation();
+                playAnimation();
+            }
+        });
+
+        // Initial render
+        window.onload = () => {
+            const arrStr = document.getElementById('arrayInput').value;
+            originalArray = arrStr.split(',').map(x => parseInt(x.trim()));
+            renderArray(originalArray);
+        };
+    </script>
+</body>
+</html>

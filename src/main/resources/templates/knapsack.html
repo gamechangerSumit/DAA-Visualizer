@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Knapsack Visualizer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+  .topbar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 20px;
+            background: #fff;
+            border-bottom: 2px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+  .home-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+  .home-btn:hover {
+            background: #5a6268;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+  .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+  .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+  .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+  .input-row label {
+            min-width: 120px;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="number"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+  .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+  .btn-secondary {
+            background: #2196F3;
+        }
+  .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        #message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #e3f2fd;
+            color: #1565c0;
+            font-weight: 500;
+            min-height: 20px;
+        }
+  .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 2px solid #ddd;
+            padding: 10px 14px;
+            text-align: center;
+            min-width: 50px;
+            font-size: 14px;
+        }
+        th {
+            background: #4CAF50;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+  .current-cell {
+            background: #ffeb3b!important;
+            font-weight: bold;
+            border: 3px solid #ff9800!important;
+        }
+  .updated-cell {
+            background: #a5d6a7!important;
+            animation: flash 0.5s;
+        }
+  .taken-row {
+            background: #c8e6c9;
+        }
+        @keyframes flash {
+            0% { background: #4CAF50; color: white; }
+            100% { background: #a5d6a7; }
+        }
+  .info {
+            background: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <button class="home-btn" onclick="goHome()">← Home</button>
+        <h1>Knapsack Visualizer</h1>
+    </div>
+
+    <div class="container">
+        <div class="info" id="infoBox">
+            <b>Note:</b> Item ko tod nahi sakte. Ya to pura lo ya chhodo. DP table step-by-step dekho.
+        </div>
+
+        <div class="input-section">
+            <div class="input-row">
+                <label>Type:</label>
+                <label style="font-weight:400; cursor:pointer;">
+                    <input type="radio" name="knapType" value="01" checked onchange="updateInfo()"> 0/1 DP
+                </label>
+                <label style="font-weight:400; cursor:pointer; margin-left:20px;">
+                    <input type="radio" name="knapType" value="fractional" onchange="updateInfo()"> Fractional Greedy
+                </label>
+            </div>
+
+            <div class="input-row">
+                <label>Weights:</label>
+                <input type="text" id="weights" placeholder="1,3,4,5" value="1,3,4,5">
+            </div>
+            <div class="input-row">
+                <label>Values:</label>
+                <input type="text" id="values" placeholder="1,4,5,7" value="1,4,5,7">
+            </div>
+            <div class="input-row">
+                <label>Capacity W:</label>
+                <input type="number" id="capacity" placeholder="7" value="7" min="1">
+            </div>
+
+            <div class="btn-group">
+                <button onclick="runKnapsack()">Run Algorithm</button>
+                <button class="btn-secondary" onclick="nextStep()" id="nextBtn" disabled>Next Step →</button>
+                <button class="btn-secondary" onclick="autoPlay()" id="autoBtn" disabled>Auto Play</button>
+                <button onclick="reset()" id="resetBtn" disabled>Reset</button>
+            </div>
+
+            <div id="message">Weights, Values aur Capacity daal ke Run Algorithm dabao</div>
+        </div>
+
+        <div class="table-container" id="tableDiv"></div>
+    </div>
+
+<script>
+let steps = [];
+let currentStep = -1;
+let autoPlayInterval = null;
+
+function goHome() {
+    window.location.href = '/';
+}
+
+function updateInfo() {
+    const type = document.querySelector('input[name="knapType"]:checked').value;
+    const info = document.getElementById('infoBox');
+    if (type === '01') {
+        info.innerHTML = '<b>Note:</b> Item ko tod nahi sakte. Ya to pura lo ya chhodo. DP table step-by-step dekho.';
+    } else {
+        info.innerHTML = '<b>Note:</b> Fractional Knapsack - Item ko tod sakte hain. Value/Weight ratio se greedy choose karta hai.';
+    }
+}
+
+async function runKnapsack() {
+    // .replace(/\s+/g, '') se saare space hata do
+    const weights = document.getElementById('weights').value.trim().replace(/\s+/g, '');
+    const values = document.getElementById('values').value.trim().replace(/\s+/g, '');
+    const capacity = document.getElementById('capacity').value.trim();
+    const type = document.querySelector('input[name="knapType"]:checked').value;
+
+    if (!weights ||!values ||!capacity) {
+        alert('Sab fields bharo bhai!');
+        return;
+    }
+
+    // Check karo count same hai ya nahi
+    const wCount = weights.split(',').filter(s => s!=='').length;
+    const vCount = values.split(',').filter(s => s!=='').length;
+    if (wCount!== vCount) {
+        alert(`Error: Weights me ${wCount} item hai, Values me ${vCount} item hai. Dono same rakho!`);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('capacity', capacity);
+    formData.append('weights', weights);
+    formData.append('values', values);
+
+    // baaki code same...
+
+    let url, method;
+
+    if (type === '01') {
+        url = '/knapsack';
+        method = 'POST';
+    } else {
+        url = '/greedy/knapsack';
+        method = 'GET';
+    }
+
+    try {
+        let response;
+        if (method === 'POST') {
+            response = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+        } else {
+            const query = new URLSearchParams(formData).toString();
+            response = await fetch(`${url}?${query}`, { method: 'GET' });
+        }
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Server error ${response.status}: ${errText}`);
+        }
+
+        steps = await response.json();
+
+        if (!Array.isArray(steps) || steps.length === 0) {
+            throw new Error('Backend se steps array nahi aaya');
+        }
+
+        currentStep = 0;
+        document.getElementById('nextBtn').disabled = false;
+        document.getElementById('autoBtn').disabled = false;
+        document.getElementById('resetBtn').disabled = false;
+        showStep();
+    } catch (e) {
+        alert('Error: ' + e.message);
+        console.error('Full error:', e);
+        document.getElementById('message').textContent = 'Error: ' + e.message;
+    }
+}
+
+function showStep() {
+    if (!steps ||!Array.isArray(steps) || steps.length === 0) {
+        document.getElementById('message').textContent = 'Error: Steps load nahi hue.';
+        return;
+    }
+
+    if (currentStep >= steps.length || currentStep < 0) {
+        document.getElementById('message').innerHTML = '<b>Algorithm Complete!</b>';
+        document.getElementById('nextBtn').disabled = true;
+        document.getElementById('autoBtn').disabled = true;
+        return;
+    }
+
+    const step = steps[currentStep];
+    if (!step) {
+        document.getElementById('message').textContent = `Error: Step ${currentStep} undefined hai.`;
+        return;
+    }
+
+    const msg = step.message || 'No message';
+    document.getElementById('message').textContent = `Step ${currentStep + 1}/${steps.length}: ${msg}`;
+    renderTable(step);
+}
+
+function renderTable(step) {
+    if (!step) return;
+
+    if (step.taken!== undefined) {
+        renderFractionalTable(step);
+    } else if (step.dp!== undefined) {
+        render01Table(step);
+    } else {
+        document.getElementById('tableDiv').innerHTML = '<p>Table render nahi ho pa raha.</p>';
+    }
+}
+
+function renderFractionalTable(step) {
+    const taken = step.taken || [];
+    const n = taken.length;
+
+    let html = '<table><tr><th>Item</th><th>Weight Taken</th><th>Status</th></tr>';
+
+    for (let i = 0; i < n; i++) {
+        const rowClass = (i === step.currentItem)? 'class="taken-row"' : '';
+        let status = 'Not Taken';
+        if (taken[i] > 0) status = 'Taken';
+        if (i === step.currentItem) status = 'Processing...';
+
+        html += `<tr ${rowClass}>
+                    <th>Item ${i}</th>
+                    <td>${taken[i].toFixed(2)}</td>
+                    <td>${status}</td>
+                 </tr>`;
+    }
+
+    html += `<tr style="background:#e8f5e9; font-weight:bold;">
+                <th>Total</th>
+                <td>Remaining: ${(step.remainingCapacity || 0).toFixed(2)}</td>
+                <td>Value: ${(step.totalValue || 0).toFixed(2)}</td>
+             </tr>`;
+    html += '</table>';
+
+    document.getElementById('tableDiv').innerHTML = html;
+}
+
+function render01Table(step) {
+    const dp = step.dp;
+    if (!dp || dp.length === 0) return;
+
+    const n = dp.length - 1;
+    const W = dp[0].length - 1;
+
+    let html = '<table><tr><th>Item\\W</th>';
+
+    for (let w = 0; w <= W; w++) {
+        html += `<th>${w}</th>`;
+    }
+    html += '</tr>';
+
+    for (let i = 0; i <= n; i++) {
+        const rowClass = (i === step.item)? 'class="taken-row"' : '';
+        html += `<tr ${rowClass}><th>Item ${i}</th>`;
+
+        for (let w = 0; w <= W; w++) {
+            let cellClass = '';
+            if (i === step.item && w === step.capacity) {
+                cellClass = 'class="current-cell"';
+            } else if (step.prevValue!== undefined && dp[i][w]!== step.prevValue && i === step.item && w === step.capacity) {
+                cellClass = 'class="updated-cell"';
+            }
+            html += `<td ${cellClass}>${dp[i][w]}</td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</table>';
+
+    document.getElementById('tableDiv').innerHTML = html;
+}
+
+function nextStep() {
+    currentStep++;
+    showStep();
+}
+
+function autoPlay() {
+    const btn = document.getElementById('autoBtn');
+    if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+        autoPlayInterval = null;
+        btn.textContent = 'Auto Play';
+    } else {
+        btn.textContent = 'Pause';
+        autoPlayInterval = setInterval(() => {
+            if (currentStep < steps.length - 1) {
+                nextStep();
+            } else {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+                btn.textContent = 'Auto Play';
+            }
+        }, 800);
+    }
+}
+
+function reset() {
+    clearInterval(autoPlayInterval);
+    autoPlayInterval = null;
+    steps = [];
+    currentStep = -1;
+    document.getElementById('tableDiv').innerHTML = '';
+    document.getElementById('message').textContent = 'Reset ho gaya. Naye input daalo';
+    document.getElementById('nextBtn').disabled = true;
+    document.getElementById('autoBtn').disabled = true;
+    document.getElementById('autoBtn').textContent = 'Auto Play';
+    document.getElementById('resetBtn').disabled = true;
+}
+</script>
+</body>
+</html>

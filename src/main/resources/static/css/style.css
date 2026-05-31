@@ -1,0 +1,90 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    text-align: center;
+}
+h1 {
+    color: #f43f5e;
+    margin-bottom: 20px;
+}
+.controls {
+    margin: 20px 0;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+input[type="text"] {
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 16px;
+    width: 200px;
+}
+button {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    background: #f43f5e;
+    color: white;
+    cursor: pointer;
+}
+button:hover { background: #e11d48; }
+#message {
+    margin: 20px 0;
+    font-size: 18px;
+    color: #22d3ee;
+    height: 30px;
+    font-weight: 500;
+}
+#canvas-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+canvas {
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.3);
+}
+label { color: #94a3b8; }
+
+.step-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+#stepCounter {
+    color: #94a3b8;
+    font-size: 16px;
+    font-weight: 500;
+}
+button:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+select {
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}

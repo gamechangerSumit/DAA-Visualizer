@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Floyd Warshall Visualizer</title>
+    <style>
+        body { font-family: Arial; background: #0f172a; color: white; padding: 20px; text-align: center; }
+        textarea { width: 400px; height: 200px; background: #1e293b; color: white; border: 2px solid #334155; border-radius: 8px; padding: 10px; font-size: 14px; }
+        button { padding: 12px 25px; margin: 10px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #2563eb; }
+        table { border-collapse: collapse; margin: 20px auto; }
+        td { border: 2px solid #334155; padding: 15px; min-width: 60px; text-align: center; font-size: 16px; background: #1e293b; transition: all 0.3s; }
+        td.updated { background: #22c55e; color: black; font-weight: bold; transform: scale(1.1); }
+        td.diagonal { background: #334155; }
+       .info { font-size: 18px; margin: 15px; color: #60a5fa; }
+       .format { color: #94a3b8; font-size: 14px; margin: 10px; }
+
+       #info {
+    white-space: pre-line; /* \n ko line break bana dega */
+    font-family: monospace;
+    font-size: 14px;
+    text-align: left;
+    margin-top: 20px;
+}
+
+button:last-child {
+    background: #28a745;
+    margin-left: 10px;
+}
+button:last-child:hover {
+    background: #218838;
+}
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 15px 20px;
+
+
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.home-btn {
+    background: #6c757d;
+    padding: 8px 16px;
+    font-size: 14px;
+    margin: 0;
+}
+.home-btn:hover {
+    background: #5a6268;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+    </style>
+</head>
+<body>
+
+    <body>
+    <!-- Home button top-left -->
+    <div class="topbar">
+        <button class="home-btn" onclick="goHome()">← Home</button>
+    </div>
+    
+    <div class="container">
+        ...
+    <h1>Floyd Warshall Algorithm</h1>
+    <p class="format">Matrix format: Use comma for columns, semicolon for rows<br>
+    Example: 0,5,INF,10; INF,0,3,INF; INF,INF,0,1; INF,INF,INF,0</p>
+
+    <textarea id="matrixInput">0,5,INF,10;INF,0,3,INF;INF,INF,0,1;INF,INF,INF,0</textarea>
+    <br>
+    <button onclick="runFloyd()">Run Algorithm</button>
+    <button onclick="nextStep()">Next Step</button>
+    <button onclick="autoPlay()">Auto Play</button>
+    <button onclick="reset()">Reset</button>
+
+    <div class="info" id="info">Enter matrix and click Run</div>
+    <div id="tableDiv"></div>
+   
+</div>
+
+    <script>
+
+        function goHome() {
+    window.location.href = '/';
+}
+    let steps = [];
+    let currentStep = 0;
+    let timer = null;
+    const INF = 999;
+
+    async function runFloyd() {
+        const input = document.getElementById('matrixInput').value.trim();
+
+        if (!input) {
+            alert('Matrix daal bhai!');
+            return;
+        }
+
+        try {
+            const matrix = parseMatrix(input);
+            console.log('Sending matrix:', matrix); // debug ke liye
+
+            document.getElementById('info').textContent = 'Loading...';
+
+            // IMPORTANT: /dp/floyd hai, sirf /floyd nahi
+            const res = await fetch('/dp/floyd', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(matrix)
+            });
+
+            if (!res.ok) {
+                throw new Error('Server error: ' + res.status);
+            }
+
+            steps = await res.json();
+            currentStep = 0;
+            drawTable();
+        } catch (err) {
+            alert('Error: ' + err.message);
+            console.error(err);
+            document.getElementById('info').textContent = 'Error loading steps';
+        }
+    }
+
+    function parseMatrix(str) {
+        return str.split(';').map(row =>
+            row.split(',').map(val => {
+                val = val.trim().toUpperCase();
+                return val === 'INF'? INF : parseInt(val);
+            })
+        );
+    }
+
+    function drawTable() {
+        if (steps.length === 0) return;
+        const step = steps[currentStep];
+        const dist = step.dist;
+        let html = '<table>';
+
+        for (let i = 0; i < dist.length; i++) {
+            html += '<tr>';
+            for (let j = 0; j < dist[i].length; j++) {
+                let className = '';
+                if (i === j) className = 'diagonal';
+                if (step.updated && i === step.i && j === step.j) className = 'updated';
+
+                let val = dist[i][j] >= INF? 'INF' : dist[i][j];
+                html += `<td class="${className}">${val}</td>`;
+            }
+            html += '</tr>';
+        }
+        html += '</table>';
+
+        document.getElementById('tableDiv').innerHTML = html;
+        document.getElementById('info').innerHTML =
+            `Step ${currentStep}/${steps.length-1}: ${step.message}<br>` +
+            (step.k >= 0? `k=${step.k}, checking ${step.i} → ${step.j}` : '');
+    }
+
+    function nextStep() {
+        if (currentStep < steps.length - 1) {
+            currentStep++;
+            drawTable();
+        }
+    }
+
+    function autoPlay() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+            return;
+        }
+        timer = setInterval(() => {
+            if (currentStep < steps.length - 1) {
+                nextStep();
+            } else {
+                clearInterval(timer);
+                timer = null;
+            }
+        }, 500);
+    }
+
+    function reset() {
+        clearInterval(timer);
+        timer = null;
+        currentStep = 0;
+        document.getElementById('info').textContent = 'Enter matrix and click Run';
+        document.getElementById('tableDiv').innerHTML = '';
+    }
+</script>
+</body>
+</html>

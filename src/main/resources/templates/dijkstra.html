@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Dijkstra Visualizer</title>
+    <style>
+        body { font-family: Arial; background: #0f172a; color: white; text-align: center; padding: 20px; }
+       .header { position: relative; margin-bottom: 20px; }
+       .back-btn { position: absolute; top: 0; left: 20px; color: #3b82f6; text-decoration: none; padding: 10px 20px; background: #1e293b; border-radius: 8px; font-weight: bold; }
+       .back-btn:hover { background: #334155; }
+       .controls { background: #1e293b; padding: 15px; border-radius: 10px; margin: 20px auto; max-width: 900px; }
+        input, button { padding: 10px; margin: 5px; border-radius: 5px; border: none; font-size: 14px; }
+        button { background: #3b82f6; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2563eb; }
+       .btn-reset { background: #ef4444; }
+       .btn-reset:hover { background: #dc2626; }
+        #graph { margin: 20px auto; border: 2px solid #334155; border-radius: 10px; background: #1e293b; display: block; }
+       .node { fill: #3b82f6; stroke: white; stroke-width: 2; transition: all 0.3s; }
+       .node.visited { fill: #8b5cf6; }
+       .node.current { fill: #f59e0b; stroke: #f59e0b; stroke-width: 4; }
+       .node.path { fill: #22c55e; stroke: #22c55e; stroke-width: 4; filter: drop-shadow(0 0 10px #22c55e); }
+       .edge { stroke: #475569; stroke-width: 2; transition: all 0.3s; }
+       .edge.relaxed { stroke: #22c55e; stroke-width: 5; filter: drop-shadow(0 0 5px #22c55e); }
+       .edge.path { stroke: #fbbf24; stroke-width: 7; filter: drop-shadow(0 0 8px #fbbf24); }
+        text { fill: white; font-size: 14px; font-weight: bold; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="back-btn">← Home</a>
+        <h1>Dijkstra's Algorithm - Shortest Path</h1>
+    </div>
+
+    <div class="controls">
+        <input type="text" id="edges" value="0-1-4,0-2-1,1-2-2,1-3-5,2-3-8,2-4-10,3-4-2" style="width: 400px;" placeholder="u-v-weight,u-v-weight">
+        <input type="number" id="start" value="0" style="width:60px;">
+        <button onclick="load()">Run Dijkstra</button>
+        <button onclick="play()">▶ Play</button>
+        <button onclick="next()">Next →</button>
+        <button class="btn-reset" onclick="reset()">Reset</button>
+    </div>
+    <div id="msg" style="font-size:20px;color:#22d3ee;margin:15px;font-weight:bold;"></div>
+    <div id="step" style="color:#94a3b8;margin:10px;font-size:16px;"></div>
+    <svg id="graph" width="800" height="500"></svg>
+
+    <script th:inline="none">
+        let steps = [], idx = 0, timer = null;
+        let originalEdges = "0-1-4,0-2-1,1-2-2,1-3-5,2-3-8,2-4-10,3-4-2";
+
+        const positions = [
+            [100,250], // 0
+            [300,100], // 1
+            [300,400], // 2
+            [500,100], // 3
+            [500,400] // 4
+        ];
+
+        async function load() {
+            const edges = document.getElementById('edges').value;
+            originalEdges = edges;
+            const start = document.getElementById('start').value;
+
+            try {
+                document.getElementById('msg').textContent = 'Loading steps...';
+                const res = await fetch('/graph/dijkstra?start=' + start + '&edges=' + encodeURIComponent(edges));
+                if (!res.ok) throw new Error('Backend error: ' + res.status);
+                steps = await res.json();
+                idx = 0;
+                draw();
+            } catch (err) {
+                alert('Error: ' + err.message);
+                document.getElementById('msg').textContent = 'Error loading steps';
+            }
+        }
+
+        function draw() {
+            if (idx >= steps.length) return;
+            const s = steps[idx];
+
+            let msg = s.message || '';
+            if (s.totalCost > 0 && s.totalCost < 1000000) {
+                msg += ' | Total Cost: ' + s.totalCost;
+            }
+            document.getElementById('msg').textContent = msg;
+            document.getElementById('step').textContent = 'Step: ' + (idx+1) + ' / ' + steps.length;
+
+            const svg = document.getElementById('graph');
+            svg.innerHTML = '';
+
+            const edgeList = document.getElementById('edges').value.split(',');
+
+            // Path ke edges set bana le
+            const pathEdges = new Set();
+            if (s.path && s.path.length > 1) {
+                for (let i = 0; i < s.path.length - 1; i++) {
+                    const u = s.path[i];
+                    const v = s.path[i + 1];
+                    pathEdges.add(u + '-' + v);
+                    pathEdges.add(v + '-' + u);
+                }
+            }
+
+            // Edges draw
+            edgeList.forEach(e => {
+                const parts = e.trim().split('-');
+                if (parts.length < 3) return;
+                const u = parseInt(parts[0]);
+                const v = parseInt(parts[1]);
+                const w = parseInt(parts[2]);
+
+                if (u >= positions.length || v >= positions.length) return;
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+                line.setAttribute('x1',positions[u][0]);
+                line.setAttribute('y1',positions[u][1]);
+                line.setAttribute('x2',positions[v][0]);
+                line.setAttribute('y2',positions[v][1]);
+
+                let className = 'edge';
+
+                // Priority: Path > CurrentEdge > Normal
+                if (pathEdges.has(u + '-' + v)) {
+                    className = 'edge path';
+                }
+                if (s.currentEdge && s.currentEdge[0]===u && s.currentEdge[1]===v) {
+                    className = 'edge relaxed';
+                }
+
+                line.setAttribute('class', className);
+                svg.appendChild(line);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+                text.setAttribute('x',(positions[u][0]+positions[v][0])/2);
+                text.setAttribute('y',(positions[u][1]+positions[v][1])/2 - 12);
+                text.textContent = w;
+                svg.appendChild(text);
+            });
+
+            // Nodes draw
+            for(let i=0; i<positions.length; i++) {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+                circle.setAttribute('cx',positions[i][0]);
+                circle.setAttribute('cy',positions[i][1]);
+
+                let className = 'node';
+                let radius = 25;
+
+                // Path wale nodes green + bade + glow
+                if (s.path && s.path.includes(i)) {
+                    className = 'node path';
+                    radius = 28;
+                }
+
+                if (s.visitedNodes && s.visitedNodes.includes(i)) {
+                    className += ' visited';
+                }
+                if (i === s.currentNode) {
+                    className += ' current';
+                    radius = 30;
+                }
+
+                circle.setAttribute('class', className);
+                circle.setAttribute('r', radius);
+                svg.appendChild(circle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+                text.setAttribute('x',positions[i][0]);
+                text.setAttribute('y',positions[i][1]+5);
+                text.setAttribute('text-anchor','middle');
+                text.textContent = i;
+                svg.appendChild(text);
+            }
+        }
+
+        function play() {
+            if (timer) return;
+            if (steps.length === 0) { load(); return; }
+            timer = setInterval(() => {
+                if (idx < steps.length-1) {
+                    idx++;
+                    draw();
+                } else {
+                    pause();
+                }
+            }, 1000);
+        }
+
+        function pause() {
+            clearInterval(timer);
+            timer = null;
+        }
+
+        function next() {
+            pause();
+            if (idx < steps.length-1) {
+                idx++;
+                draw();
+            }
+        }
+
+        function reset() {
+            pause();
+            idx = 0;
+            document.getElementById('edges').value = originalEdges;
+            document.getElementById('msg').textContent = 'Reset done. Click Run Dijkstra';
+            document.getElementById('step').textContent = '';
+            document.getElementById('graph').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
