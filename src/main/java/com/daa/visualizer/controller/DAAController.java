@@ -1,6 +1,10 @@
 package com.daa.visualizer.controller;
 
 import com.daa.visualizer.model.FractionalStep;
+
+import com.daa.visualizer.service.TspService;
+import com.daa.visualizer.model.TspStep;
+
 import com.daa.visualizer.algo.*;
 import com.daa.visualizer.model.*;
 import com.daa.visualizer.service.DynamicAlgo;
@@ -12,6 +16,12 @@ import java.util.*;
 
 @Controller
 public class DAAController {
+
+    private final TspService tspService;
+
+    public DAAController(TspService tspService) {
+        this.tspService = tspService;
+    }
 
     @Autowired
     private SortingAlgo sortingAlgo;
@@ -28,14 +38,47 @@ public class DAAController {
     @Autowired
     private KnapsackAlgo knapsackAlgo; // 0/1 knapsack isme hoga
 
+
     // ========== PAGE ROUTES ==========
-    @GetMapping("/") public String home() { return "index"; }
-    @GetMapping("/sort") public String sortPage() { return "sorting"; }
-    @GetMapping("/graph-traversal") public String traversalPage() { return "bfsdfs"; }
-    @GetMapping("/graph-mst") public String mstPage() { return "prims"; }
-    @GetMapping("/graph-path") public String pathPage() { return "dijkstra"; }
-    @GetMapping("/dp") public String dpPage() { return "floyd"; }
-    @GetMapping("/greedy") public String greedyPage() { return "knapsack"; }
+    @GetMapping("/tsp")
+    public String tspPage() {
+        return "tsp";
+    }
+
+    @GetMapping("/")
+    public String home() {
+        return "index";
+    }
+
+    @GetMapping("/sort")
+    public String sortPage() {
+        return "sorting";
+    }
+
+    @GetMapping("/graph-traversal")
+    public String traversalPage() {
+        return "bfsdfs";
+    }
+
+    @GetMapping("/graph-mst")
+    public String mstPage() {
+        return "prims";
+    }
+
+    @GetMapping("/graph-path")
+    public String pathPage() {
+        return "dijkstra";
+    }
+
+    @GetMapping("/dp")
+    public String dpPage() {
+        return "floyd";
+    }
+
+    @GetMapping("/greedy")
+    public String greedyPage() {
+        return "knapsack";
+    }
 
     // ========== SORTING APIs ==========
     @GetMapping("/sort/{algo}")
@@ -94,17 +137,17 @@ public class DAAController {
                                        @RequestParam String values) {
         int[] w = Arrays.stream(weights.split(","))
                 .map(s -> s.trim().replaceAll("\\s+", "")) // space sab hatao
-                .filter(s ->!s.isEmpty())
+                .filter(s -> !s.isEmpty())
                 .mapToInt(Integer::parseInt)
                 .toArray();
 
         int[] v = Arrays.stream(values.split(","))
                 .map(s -> s.trim().replaceAll("\\s+", ""))
-                .filter(s ->!s.isEmpty())
+                .filter(s -> !s.isEmpty())
                 .mapToInt(Integer::parseInt)
                 .toArray();
 
-        if (w.length!= v.length) {
+        if (w.length != v.length) {
             throw new IllegalArgumentException(
                     "Weights=" + w.length + " items, Values=" + v.length + " items. Count same karo!"
             );
@@ -112,6 +155,7 @@ public class DAAController {
 
         return knapsackAlgo.getKnapsackSteps(capacity, w, v);
     }
+
     // ========== GREEDY API - FRACTIONAL KNAPSACK ==========
     @GetMapping("/greedy/knapsack")
     @ResponseBody
@@ -164,5 +208,12 @@ public class DAAController {
             adj.add(map.getOrDefault(i, new ArrayList<>()));
         }
         return adj;
+    }
+
+    @PostMapping("/tsp/solve")
+    @ResponseBody
+    public List<TspStep> solveTSP(@RequestBody int[][] cities) {
+        System.out.println("Cities received: " + cities.length); // debug ke liye
+        return TspAlgo.nearestNeighbor(cities);
     }
 }

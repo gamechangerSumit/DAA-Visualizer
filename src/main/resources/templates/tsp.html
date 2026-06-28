@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>TSP - Distance Matrix</title>
+    <style>
+        body {font-family: Arial; background: #1e1e2e; color: #cdd6f4; padding: 20px; display: flex; flex-direction: column; align-items: center;}
+        h2 {color: #89b4fa;}
+        textarea {width: 400px; height: 200px; background: #11111b; color: #cdd6f4; border: 2px solid #89b4fa; border-radius: 8px; padding: 10px; font-size: 16px; font-family: monospace;}
+      .controls {margin: 20px 0; display: flex; gap: 10px;}
+        button {padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; background: #89b4fa; color: #1e1e2e; cursor: pointer; font-weight: bold;}
+        button:hover {background: #74c7ec;}
+        button:disabled {background: #6c7086; cursor: not-allowed;}
+        #output {margin-top: 20px; width: 500px; background: #11111b; padding: 15px; border-radius: 8px; border: 2px solid #a6e3a1; min-height: 100px;}
+      .step {margin: 8px 0; padding: 8px; background: #313244; border-radius: 5px;}
+        a {margin-top: 20px; color: #f38ba8; text-decoration: none;}
+    </style>
+</head>
+<body>
+    <h2>TSP - Nearest Neighbor - Matrix Input</h2>
+
+    <p>Distance Matrix paste karo. Diagonal 0 rakho, symmetric hona chahiye</p>
+    <textarea id="matrixInput" placeholder="0 10 15 20
+10 0 35 25
+15 35 0 30
+20 25 30 0"></textarea>
+
+    <div class="controls">
+        <button onclick="solveTSP()">Solve TSP</button>
+        <button onclick="nextStep()" id="nextBtn" disabled>Next Step</button>
+        <button onclick="resetAll()">Reset</button>
+    </div>
+
+    <div id="output">
+        <h3>Steps:</h3>
+        <div id="stepsList">Matrix daalke Solve dabao</div>
+    </div>
+
+    <a href="/">← Back to Home</a>
+
+    <script>
+        let steps = [];
+        let currentStep = 0;
+
+        async function solveTSP() {
+            const input = document.getElementById('matrixInput').value.trim();
+            if(!input) {
+                alert('Matrix daalo pehle!');
+                return;
+            }
+
+            const rows = input.split('\n').map(r => r.trim().split(/\s+/).map(Number));
+
+            try {
+                const response = await fetch('/tsp/solve', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(rows)
+                });
+
+                steps = await response.json();
+                console.log("Steps:", steps);
+                currentStep = 0;
+                document.getElementById('nextBtn').disabled = false;
+                document.getElementById('stepsList').innerHTML = '';
+                showStep();
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        function showStep() {
+            const div = document.getElementById('stepsList');
+
+            if(currentStep < steps.length) {
+                const s = steps[currentStep];
+                div.innerHTML += `<div class="step"><b>Step ${currentStep+1}:</b> ${s.description} <br> Path: [${s.visitedOrder.join(' -> ')}] <br> Total Distance: ${s.totalDistance.toFixed(2)}</div>`;
+                currentStep++;
+            } else {
+                document.getElementById('nextBtn').disabled = true;
+                div.innerHTML += `<div class="step" style="background:#a6e3a1;color:#1e1e2e"><b>Complete!</b></div>`;
+            }
+        }
+
+        function nextStep() {
+            showStep();
+        }
+
+        function resetAll() {
+            steps = [];
+            currentStep = 0;
+            document.getElementById('stepsList').innerHTML = 'Matrix daalke Solve dabao';
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('matrixInput').value = '';
+        }
+    </script>
+</body>
+</html>
